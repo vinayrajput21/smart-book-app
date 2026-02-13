@@ -81,11 +81,31 @@ const channel = supabase
 }, [user?.id]);   
 
 
-  const handleDelete = async (id: string) => {
-    setDeletingId(id);
-    await supabase.from("bookmarks").delete().eq("id", id);
-    setDeletingId(null);
-  };
+const handleDelete = async (id: string) => {
+  // Optimistic update – remove immediately
+  const deletedBookmark = bookmarks.find(b => b.id === id);
+  if (!deletedBookmark) return;
+
+  setBookmarks(prev => prev.filter(b => b.id !== id));
+  setDeletingId(id);
+
+  const { error } = await supabase
+    .from("bookmarks")
+    .delete()
+    .eq("id", id);
+
+  setDeletingId(null);
+
+  if (error) {
+    console.error("Delete failed:", error);
+    // Rollback: add it back
+    setBookmarks(prev => [...prev, deletedBookmark].sort((a, b) =>
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    ));
+    // Optional: show toast/notification "Failed to delete"
+  }
+  // No need to refetch full list – optimistic + RLS guarantees only own deletes succeed
+};
 
   const getDomain = (url: string) => {
     try {
