@@ -327,7 +327,7 @@ This project demonstrates:
 
 ## 👨‍💻 Author
 
-Vinay Rajput 
+Vinay Rajput,  
 Full Stack Developer (MERN + Next.js + Supabase)
 
 ---
